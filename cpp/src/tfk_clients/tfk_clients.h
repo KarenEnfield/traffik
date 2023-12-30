@@ -1,6 +1,7 @@
 
 #include <cstdlib>
 #include <uv.h>
+// list of clients
 class tfk_clients{
     uv_loop_t *loop;
 
