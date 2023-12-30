@@ -1,0 +1,57 @@
+{
+        "servers":[
+        {
+            "name": "server_str",
+            "port": 5001,
+            "type": "message",
+            "message": "Hello_World!",
+            "dataLength" : -1,
+            "errorCode": 200,
+            "duration" : "continuous",
+            "timeoutSeconds": 10
+        },
+        {
+            "name": "server_404",
+            "port": 5002,
+            "type": "error",
+            "message": "Hello_World!",
+            "dataLength" : -1,
+            "errorCode": 404,
+            "duration" : "timed",
+            "timeoutSeconds": 10
+        },
+        {
+            "name": "server_buf",
+            "port": 5003,
+            "type": "random",
+            "message": "Hello_World!",
+            "errorCode": 200,
+            "duration" : "timeout",
+            "timeoutSeconds": 10
+        }, 
+        {
+            "name": "Server1",
+            "port": 8081,
+            "type": "message",
+            "message": "Hello_from_Server1",
+            "duration": "timeout",
+            "timeoutSeconds": 10
+        },
+        {
+            "name": "Server2",
+            "port": 8082,
+            "type": "random",
+            "dataLength": 100,
+            "duration": "timeout",
+            "timeoutSeconds": 10
+        },
+        {
+            "name": "Server3",
+            "port": 8083,
+            "type": "error",
+            "errorCode": 404,
+            "duration": "continuous",
+            "timeoutSeconds": 10
+        }
+    ]
+}
