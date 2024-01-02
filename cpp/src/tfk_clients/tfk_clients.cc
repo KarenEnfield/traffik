@@ -22,7 +22,7 @@ struct ClientData {
     std::string url;
     int rate;
     std::string message;
-    int maxSends;
+    int max_sends;
     std::string ip;
     int port;
     uv_buf_t buf; 
@@ -31,9 +31,9 @@ struct ClientData {
     std::unique_ptr<uv_tcp_t> handle;
     std::unique_ptr<uv_timer_t> timer; 
     std::unique_ptr<uv_write_t> write_req;
-    int successfulSends;
-    int consecutiveFailures;
-    unsigned int totalSends;
+    int successful_sends;
+    int consecutive_failures;
+    unsigned int total_sends;
     std::unique_ptr<tfk_logger> log;
 };
 
@@ -47,10 +47,10 @@ void on_read(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf);
 
 void on_connect(uv_connect_t* req, int status) {
     auto client_data = static_cast<ClientData*>(req->data);
-    client_data->totalSends++;
+    client_data->total_sends++;
     if (status < 0) {
-        client_data->consecutiveFailures++;
-        client_data->log->logWarn ("{}:{} - {}({}) - {} attempt(s)", client_data->ip,  client_data->port, uv_strerror(status) ,status, client_data->consecutiveFailures); 
+        client_data->consecutive_failures++;
+        client_data->log->logWarn ("{}:{} - {}({}) - {} attempt(s)", client_data->ip,  client_data->port, uv_strerror(status) ,status, client_data->consecutive_failures); 
     } else {
         // Connection established, now set up reading
         uv_read_start(reinterpret_cast<uv_stream_t*>(req->handle), alloc_buffer, on_read);
@@ -59,8 +59,8 @@ void on_connect(uv_connect_t* req, int status) {
         status = uv_write(client_data->write_req.get(), reinterpret_cast<uv_stream_t*>(req->handle), &client_data->buf, 1, on_write);
         if (status)
         {
-            client_data->consecutiveFailures++;
-            client_data->log->logError("write request {}({}) - {} attempt(s)", uv_strerror(status), status, client_data->consecutiveFailures);
+            client_data->consecutive_failures++;
+            client_data->log->logError("write request {}({}) - {} attempt(s)", uv_strerror(status), status, client_data->consecutive_failures);
         }
     }        
     //delete req; reuse
@@ -71,14 +71,14 @@ void on_write(uv_write_t* req, int status) {
     auto client_data = static_cast<ClientData*>(req->data);
     
     if (status < 0) {
-        client_data->consecutiveFailures++;
-        client_data->log->logWarn("{}({}) - {} attempts", uv_strerror(status), status, client_data->consecutiveFailures);
+        client_data->consecutive_failures++;
+        client_data->log->logWarn("{}({}) - {} attempts", uv_strerror(status), status, client_data->consecutive_failures);
     }
     else   
     { 
-        client_data->successfulSends++;
-        client_data->consecutiveFailures = 0;
-        client_data->log->logInfo("{} successful sends", client_data->successfulSends);
+        client_data->successful_sends++;
+        client_data->consecutive_failures = 0;
+        client_data->log->logInfo("{} successful sends", client_data->successful_sends);
     }
     
     uv_close(reinterpret_cast<uv_handle_t*>(req->handle), on_close);
@@ -94,16 +94,16 @@ void on_timer(uv_timer_t* timer) {
     uv_tcp_t* handle = client_data->handle.get();
     
     // Stop continuous sending if consecutive failures exceed a threshold
-    const int maxConsecutiveFailures = -1;
-    if (maxConsecutiveFailures>0 && client_data->consecutiveFailures >= maxConsecutiveFailures) {
-        client_data->log->logError("stopping client due to {} consecutive send failures", client_data->successfulSends);
+    const int maxconsecutive_failures = -1;
+    if (maxconsecutive_failures>0 && client_data->consecutive_failures >= maxconsecutive_failures) {
+        client_data->log->logError("stopping client due to {} consecutive send failures", client_data->successful_sends);
         uv_timer_stop(timer);
         return;
     }
 
     // Stop continuous sending if the maximum number of sends is reached
-    if (client_data->maxSends > 0 && client_data->totalSends >= client_data->maxSends) {
-        client_data->log->logInfo("stopping client after reaching maximum sends ({})", client_data->successfulSends);
+    if (client_data->max_sends > 0 && client_data->total_sends >= client_data->max_sends) {
+        client_data->log->logInfo("stopping client after reaching maximum sends ({})", client_data->successful_sends);
         uv_timer_stop(timer);
         return;
     }
@@ -114,7 +114,7 @@ void on_timer(uv_timer_t* timer) {
     // Create a tcp handle
     status = uv_tcp_init(client_data->loop, handle);
     if (status) 
-        client_data->log->logError("timer init {}({})", client_data->successfulSends, uv_strerror(status), status);
+        client_data->log->logError("timer init {}({})", client_data->successful_sends, uv_strerror(status), status);
        
     // Target server address and port
     status = uv_ip4_addr(client_data->ip.c_str(), client_data->port, &(client_data->inaddr));
@@ -172,7 +172,7 @@ tfk_clients::tfk_clients(uv_loop_t * dl):loop(dl==nullptr?uv_default_loop():dl)
             std::string url = client["url"];
             int rate = client["rate"];
             std::string message = client["message"];
-            int maxSends = client.value("maxSends", -1);
+            int max_sends = client.value("max_sends", -1);
             std::string ip = "";
             int port = 80;
 
@@ -259,14 +259,14 @@ tfk_clients::tfk_clients(uv_loop_t * dl):loop(dl==nullptr?uv_default_loop():dl)
             client_data->url = url;
             client_data->rate = rate;
             client_data->message = message;
-            client_data->maxSends = maxSends;
+            client_data->max_sends = max_sends;
             client_data->ip = ip;
             client_data->port = port;
             // Create a write buffer for reuse
             client_data->buf = uv_buf_init( const_cast<char*>(client_data->message.c_str()), sizeof(message));
-            client_data->successfulSends = 0;
-            client_data->consecutiveFailures = 0;
-            client_data->totalSends = 0;
+            client_data->successful_sends = 0;
+            client_data->consecutive_failures = 0;
+            client_data->total_sends = 0;
              // Create tcp client handle
             client_data->handle = std::make_unique<uv_tcp_t>();
 

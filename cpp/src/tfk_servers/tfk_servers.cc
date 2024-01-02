@@ -22,10 +22,10 @@ struct ServerConfig {
     int port;
     std::string type;       // "message", "random", "error"
     std::string message;    // Used for "message" type
-    size_t dataLength;      // Used for "random" type
-    int errorCode;          // Used for "error" type
+    size_t data_length;      // Used for "random" type
+    int error_code;          // Used for "error" type
     std::string duration;   // "continuous", "timed", "timeout"
-    int timeoutSeconds;     // Used for "timed" and "timeout" types
+    int timeout_seconds;     // Used for "timed" and "timeout" types
     bool isTimeoutExpired;  // Used to track the inactivity timeout
     uv_tcp_t* serverHandle; // Pointer to the server handle
     bool isServerRunning;   // Flag t
@@ -79,23 +79,23 @@ void on_http_request(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
             } else if (config->type == "random") {
                 // Return continuously randomized data
                 // Range check
-                if ((config->dataLength<0)||(config->dataLength>1000))
-                    config->dataLength = 50;
+                if ((config->data_length<0)||(config->data_length>1000))
+                    config->data_length = 50;
                 std::srand(static_cast<unsigned>(std::time(0)));    
-                std::string s(config->dataLength,'*');
-                for (int i=0; i<config->dataLength; i++)
+                std::string s(config->data_length,'*');
+                for (int i=0; i<config->data_length; i++)
                     s[i] = 32 + std::rand() % 94;
 
                 config->httpResponse =   "HTTP/1.1 200 OK\r\n"
                                     "Content-Type: text/plain\r\n"
-                                    "Content-Length: " + std::to_string(config->dataLength) + "\r\n"
+                                    "Content-Length: " + std::to_string(config->data_length) + "\r\n"
                                     "\r\n" + s;
     
                 response = uv_buf_init(const_cast<char*>(config->httpResponse.c_str()), config->httpResponse.length());
 
             } else if (config->type == "error") {
                 // Return an HTTP error code
-                config->httpResponse =   "HTTP/1.1 "+ std::to_string(config->errorCode)+ "\r\n"
+                config->httpResponse =   "HTTP/1.1 "+ std::to_string(config->error_code)+ "\r\n"
                                     "Content-Type: text/plain\r\n"
                                     "Content-Length: 0\r\n"
                                     "\r\n";
@@ -121,7 +121,7 @@ void on_http_request(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
                 uv_timer_init(config->loop, timer);
                 uv_timer_start(timer, [](uv_timer_t* timer) {
                     uv_close(reinterpret_cast<uv_handle_t*>(timer), nullptr);
-                }, config->timeoutSeconds * 1000, 0);
+                }, config->timeout_seconds * 1000, 0);
             } else if (config->duration == "timeout") {
                 // Set an inactivity timeout for the server
                 uv_timer_t* timer = static_cast<uv_timer_t*>(malloc(sizeof(uv_timer_t)));
@@ -132,7 +132,7 @@ void on_http_request(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
                         serverConfig->isTimeoutExpired = true;
                         uv_close(reinterpret_cast<uv_handle_t*>(timer), nullptr);
                     }
-                }, config->timeoutSeconds * 1000, 0);
+                }, config->timeout_seconds * 1000, 0);
                 uv_handle_set_data(reinterpret_cast<uv_handle_t*>(timer), &config);
             }
 
@@ -281,10 +281,10 @@ tfk_servers::tfk_servers(uv_loop_t* dl):loop(dl==nullptr?uv_default_loop():dl) {
         // Set default key values
         std::string type = "message";//config["type"];            // "message", "random", "error"
         std::string message = name;//config["message"];      // Used for "message" type
-        unsigned int dataLength = 50;//config["dataLength"];// Used for "random" type
-        int errorCode = 200; //config["errorCode"];          // Used for "error" type
+        unsigned int data_length = 50;//config["data_length"];// Used for "random" type
+        int error_code = 200; //config["error_code"];          // Used for "error" type
         std::string duration = "continuous";//config["duration"];    // "continuous", "timed", "timeout"
-        int timeoutSeconds = -1;            //config["timeoutSeconds"];// Used for "timed" and "timeout" types
+        int timeout_seconds = -1;            //config["timeout_seconds"];// Used for "timed" and "timeout" types
         
         std::unique_ptr<tfk_logger> log_ptr = std::make_unique<tfk_logger>(name);
            
@@ -307,20 +307,20 @@ tfk_servers::tfk_servers(uv_loop_t* dl):loop(dl==nullptr?uv_default_loop():dl) {
         }
 
         if (type=="random"){
-            if (auto it = config.find("dataLength"); it != config.end() && it->is_number()) {
-                dataLength = *it;
+            if (auto it = config.find("data_length"); it != config.end() && it->is_number()) {
+                data_length = *it;
             } else {   
-                //std::cerr << "Warning: Missing or invalid 'dataLength' key in server '"<< name <<"' configuration: "<< type  << ". Using '" << dataLength << "'." << std::endl;
-                log_ptr->logWarn("missing or invalid 'dataLength' key in server configuration; using default {}");
+                //std::cerr << "Warning: Missing or invalid 'data_length' key in server '"<< name <<"' configuration: "<< type  << ". Using '" << data_length << "'." << std::endl;
+                log_ptr->logWarn("missing or invalid 'data_length' key in server configuration; using default {}");
             }
         }
 
         if (type=="error"){
-            if (auto it = config.find("errorCode"); it != config.end() && it->is_number()) {
-                errorCode = *it;
+            if (auto it = config.find("error_code"); it != config.end() && it->is_number()) {
+                error_code = *it;
             } else {
-                //std::cerr << "Warning: Missing or invalid 'errorCode' key in server '"<< name <<"' configuration: "<< type  << ". Using '" << errorCode << "'." << std::endl;
-                log_ptr->logWarn("missing or invalid errorCode: using default {}", errorCode);
+                //std::cerr << "Warning: Missing or invalid 'error_code' key in server '"<< name <<"' configuration: "<< type  << ". Using '" << error_code << "'." << std::endl;
+                log_ptr->logWarn("missing or invalid error_code: using default {}", error_code);
             }
         }
         
@@ -335,11 +335,11 @@ tfk_servers::tfk_servers(uv_loop_t* dl):loop(dl==nullptr?uv_default_loop():dl) {
 
         if (duration!="continuous")
         {
-            if (auto it = config.find("timeoutSeconds"); it != config.end() && it->is_number()) {
-                timeoutSeconds = *it;
+            if (auto it = config.find("timeout_seconds"); it != config.end() && it->is_number()) {
+                timeout_seconds = *it;
             } else {
-                //std::cerr << "Warning: Missing or invalid 'timeoutSeconds' key in server '"<< name <<"' configuration: "<< type  << ".  Using '" << timeoutSeconds << "'." << std::endl;
-                log_ptr->logWarn("missing or invalid 'timeoutSeconds' key; uing default {}",timeoutSeconds );
+                //std::cerr << "Warning: Missing or invalid 'timeout_seconds' key in server '"<< name <<"' configuration: "<< type  << ".  Using '" << timeout_seconds << "'." << std::endl;
+                log_ptr->logWarn("missing or invalid 'timeout_seconds' key; uing default {}",timeout_seconds );
                 //continue;
             }
         }
@@ -355,22 +355,22 @@ tfk_servers::tfk_servers(uv_loop_t* dl):loop(dl==nullptr?uv_default_loop():dl) {
         if (bind_result ==0)
         {
             // Detailed Server is running message
-            log_ptr->logInfo("is listening on port {}, running {}, responding with {} {}", port, duration, type, type=="error" ? std::to_string(errorCode) : (type=="random" ? std::to_string(dataLength):""));
+            log_ptr->logInfo("is listening on port {}, running {}, responding with {} {}", port, duration, type, type=="error" ? std::to_string(error_code) : (type=="random" ? std::to_string(data_length):""));
             
             // Store server configuration in the server handle
-            ServerConfig* serverConfig = new ServerConfig{ loop, name, port, type, message, dataLength, errorCode, duration, timeoutSeconds, false, server, true, std::move(log_ptr), nullptr}; 
+            ServerConfig* serverConfig = new ServerConfig{ loop, name, port, type, message, data_length, error_code, duration, timeout_seconds, false, server, true, std::move(log_ptr), nullptr}; 
             uv_handle_set_data(reinterpret_cast<uv_handle_t*>(server), serverConfig);
 
             // Set up timeout timer if necessary
             if (duration == "timeout" || duration == "timed") {
                 // Duration is in seconds
-                timeoutSeconds = config["timeoutSeconds"];
-                serverConfig->timeoutSeconds = timeoutSeconds;
+                timeout_seconds = config["timeout_seconds"];
+                serverConfig->timeout_seconds = timeout_seconds;
 
                 // Initialize and start the timer
                 uv_timer_init(loop, &serverConfig->timeoutTimer);
                 uv_handle_set_data(reinterpret_cast<uv_handle_t*>(&serverConfig->timeoutTimer), serverConfig);
-                uv_timer_start(&serverConfig->timeoutTimer, on_timeout, timeoutSeconds * 1000, 0);
+                uv_timer_start(&serverConfig->timeoutTimer, on_timeout, timeout_seconds * 1000, 0);
             }
 
             uv_listen(reinterpret_cast<uv_stream_t*>(server), SOMAXCONN, on_connection);
