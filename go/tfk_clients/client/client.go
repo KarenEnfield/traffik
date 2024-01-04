@@ -25,30 +25,28 @@ type Client struct {
 func (c *Client) Run(wg *sync.WaitGroup) {
 
 	defer wg.Done()
-	//fmt
-	log.Printf("Client %s is running at %s:%d\n", c.Name, c.IPAddress, c.Port)
+
+	log.Printf("[%s] sending to %s:%d\n", c.Name, c.IPAddress, c.Port)
 
 	interval := time.Second / time.Duration(c.Rate)
 
 	// Simulating client activity
 	for i := 1; c.MaxSends == -1 || i <= c.MaxSends; i++ {
-		message := fmt.Sprintf("Sending message %d from client %s: %s", i, c.Name, c.Message)
-		//fmt
-		log.Println(message)
+		log.Printf("[%s] %d sends to  %s:%d", c.Name, i, c.IPAddress, c.Port)
 
 		// Your client logic goes here (send the message, etc.)
 		result, err := c.sendMessage()
 		if err != nil {
-			log.Printf("Error sending message %d from client %s: %v", i, c.Name, err)
+			log.Printf("[%s] error sending message %d %v", c.Name, i, err)
 		} else {
-			fmt.Printf("Received result for message %d from client %s: %.10s ...\n", i, c.Name, result)
+			log.Printf("[%s] received response %d from %s:%d %.15s ...\n", c.Name, i, c.IPAddress, c.Port, result)
 		}
 
 		// Simulate some processing time
 		time.Sleep(interval)
 	}
 
-	fmt.Printf("Client %s completed its task of %d sends.\n", c.Name, c.MaxSends)
+	log.Printf("[%s] completed maximum sends (%d) to %s:%d\n", c.Name, c.MaxSends, c.IPAddress, c.Port)
 
 }
 

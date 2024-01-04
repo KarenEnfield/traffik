@@ -3,6 +3,7 @@ package server
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"net/http"
 	"time"
@@ -81,10 +82,9 @@ func (s *Server) Run() {
 	// Create a new ServeMux (router) for each server
 	mux := http.NewServeMux()
 
-	//http.HandleFunc("/", s.handleRequest)
-	fmt.Printf("Here %s %s\n", s.Name, s.Type)
 	// Register handlers for different routes
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("[server:%d] received from %s", s.Port, r.RemoteAddr)
 		switch s.Type {
 		case "message":
 			handleMessage(w, r, s.Message)
@@ -98,7 +98,7 @@ func (s *Server) Run() {
 	})
 
 	addr := fmt.Sprintf(":%d", s.Port)
-	fmt.Printf("Server started %s on port %d...\n", s.Duration, s.Port)
+	log.Printf("[%s] port: %d,  type: %s, Started: %s (%d)\n", s.Name, s.Port, s.Type, s.Duration, s.TimeoutSeconds)
 	// Create a new http.Server
 	srv := &http.Server{
 		Addr:    addr,
@@ -112,7 +112,7 @@ func (s *Server) Run() {
 		go func() {
 			srv.ListenAndServe()
 			time.Sleep(time.Duration(s.TimeoutSeconds) * time.Second)
-			fmt.Printf("%s server stopped after %d seconds.\n", s.Name, s.TimeoutSeconds)
+			log.Printf("[%s] port: %d Stopped after %d seconds.\n", s.Name, s.Port, s.TimeoutSeconds)
 			// You may add additional cleanup logic here if needed
 		}()
 	case "timeout":
@@ -120,14 +120,14 @@ func (s *Server) Run() {
 			for {
 				select {
 				case <-time.After(time.Duration(s.TimeoutSeconds) * time.Second):
-					fmt.Printf("%s server stopped after %d seconds of inactivity.\n", s.Name, s.TimeoutSeconds)
+					log.Printf("[%s] port: %d Stopped after %d seconds of inactivity.\n", s.Name, s.Port, s.TimeoutSeconds)
 					// You may add additional cleanup logic here if needed
 					return
 				}
 			}
 		}()
 	default:
-		fmt.Printf("Invalid duration for %s server: %s\n", s.Name, s.Duration)
+		log.Printf("[%s] port: %d Invalid duration: %s\n", s.Name, s.Port, s.Duration)
 	}
 
 }
