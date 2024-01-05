@@ -1,7 +1,8 @@
 // tfk_logger/logger.go
-package tfk_logger
+package logger
 
 import (
+	"fmt"
 	"log"
 	"os"
 )
@@ -20,12 +21,13 @@ const (
 
 // Logger represents a logger instance
 type Logger struct {
+	name  string
 	level LogLevel
 }
 
 // NewLogger creates a new Logger with a specific log level
-func NewLogger(level LogLevel) *Logger {
-	return &Logger{level: level}
+func NewLogger(name string, level LogLevel) *Logger {
+	return &Logger{name: name, level: level}
 }
 
 // SetLogLevel sets the log level for the logger
@@ -34,7 +36,7 @@ func (l *Logger) SetLogLevel(level LogLevel) {
 }
 
 // logMessage logs a message with a specific log level
-func (l *Logger) logMessage(level LogLevel, message string) {
+func (l *Logger) logMessage(level LogLevel, format string, a ...interface{}) {
 	if level < l.level {
 		return
 	}
@@ -54,38 +56,40 @@ func (l *Logger) logMessage(level LogLevel, message string) {
 	case Critical:
 		logPrefix = "[critical]"
 	}
+	message := fmt.Sprintf(format, a...)
+	fullMessage := fmt.Sprintf("[%s]%s %s", l.name, logPrefix, message)
 
-	log.Println(logPrefix, message)
+	log.Println(fullMessage)
 }
 
 // Trace logs a trace message
-func (l *Logger) Trace(message string) {
-	l.logMessage(Trace, message)
+func (l *Logger) Trace(format string, a ...interface{}) {
+	l.logMessage(Trace, format, a...)
 }
 
 // Debug logs a debug message
-func (l *Logger) Debug(message string) {
-	l.logMessage(Debug, message)
+func (l *Logger) Debug(format string, a ...interface{}) {
+	l.logMessage(Debug, format, a...)
 }
 
 // Info logs an info message
-func (l *Logger) Info(message string) {
-	l.logMessage(Info, message)
+func (l *Logger) Info(format string, a ...interface{}) {
+	l.logMessage(Info, format, a...)
 }
 
 // Warning logs a warning message
-func (l *Logger) Warning(message string) {
-	l.logMessage(Warning, message)
+func (l *Logger) Warning(format string, a ...interface{}) {
+	l.logMessage(Warning, format, a...)
 }
 
 // Error logs an error message
-func (l *Logger) Error(message string) {
-	l.logMessage(Error, message)
+func (l *Logger) Error(format string, a ...interface{}) {
+	l.logMessage(Error, format, a...)
 }
 
 // Critical logs a critical message
-func (l *Logger) Critical(message string) {
-	l.logMessage(Critical, message)
+func (l *Logger) Critical(format string, a ...interface{}) {
+	l.logMessage(Critical, format, a...)
 }
 
 func init() {

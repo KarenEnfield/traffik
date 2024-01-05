@@ -2,11 +2,15 @@
 package server
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"math/rand"
 	"net/http"
+	"strconv"
+	"sync"
 	"time"
+
+	"github.com/KarenEnfield/traffik/go/tfk_logger/logger"
 )
 
 // Server represents a server
@@ -19,10 +23,16 @@ type Server struct {
 	ErrorCode      int
 	Duration       string
 	TimeoutSeconds int
+	logLevel       logger.LogLevel
+	ActivityChan   chan bool
+	stopChan       chan bool
+	inactivityDur  time.Duration
+	lock           sync.Mutex
+	lastActivity   time.Time
 }
 
 // NewServer creates a new instance of Server
-func NewServer(port int, name string, return_type string, message string, data_length int, error_code int, duration string, timeout int) *Server {
+func NewServer(port int, name string, return_type string, message string, data_length int, error_code int, duration string, timeout int, level logger.LogLevel) *Server {
 	new_server := Server{
 		Name:           name,
 		Port:           port,
@@ -32,6 +42,11 @@ func NewServer(port int, name string, return_type string, message string, data_l
 		ErrorCode:      error_code,
 		Duration:       duration,
 		TimeoutSeconds: timeout,
+		logLevel:       level,
+		ActivityChan:   make(chan bool),
+		stopChan:       make(chan bool),
+		inactivityDur:  time.Duration(timeout * int(time.Second)),
+		lastActivity:   time.Now(),
 	}
 
 	// Override fields with non-zero values from userConfig
@@ -64,9 +79,13 @@ func NewServer(port int, name string, return_type string, message string, data_l
 	case "continuous":
 		new_server.TimeoutSeconds = -1
 	case "timed":
-		new_server.TimeoutSeconds = 5
+		if new_server.TimeoutSeconds < 0 {
+			new_server.TimeoutSeconds = 5
+		}
 	case "timeout":
-		new_server.TimeoutSeconds = 5
+		if new_server.TimeoutSeconds < 0 {
+			new_server.TimeoutSeconds = 5
+		}
 	default:
 		new_server.Duration = "continuous"
 		new_server.TimeoutSeconds = -1
@@ -75,16 +94,37 @@ func NewServer(port int, name string, return_type string, message string, data_l
 	return &new_server
 }
 
+func NewServerInfo(port int, name string, return_type string, message string, data_length int, error_code int, duration string, timeout int) *Server {
+	return NewServer(port, name, return_type, message, data_length, error_code, duration, timeout, logger.Info)
+
+}
+
+// Set Logging Level
+func (s *Server) SetLogLevel(level logger.LogLevel) {
+	s.logLevel = level
+}
+
 // Run runs the server
 func (s *Server) Run() {
 	// ... (server logic, e.g., handling requests)
+	strName := "Server::" + strconv.Itoa(s.Port)
+	log := logger.NewLogger(strName, logger.LogLevel(s.logLevel))
 
 	// Create a new ServeMux (router) for each server
 	mux := http.NewServeMux()
 
 	// Register handlers for different routes
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("[server:%d] received from %s", s.Port, r.RemoteAddr)
+
+		log.Info("request from %s", r.RemoteAddr)
+		// Activity occurred, note the time
+		s.lock.Lock()
+		s.lastActivity = time.Now()
+		s.lock.Unlock()
+
+		// Notify about activity
+		s.ActivityChan <- true
+
 		switch s.Type {
 		case "message":
 			handleMessage(w, r, s.Message)
@@ -93,43 +133,85 @@ func (s *Server) Run() {
 		case "error":
 			handleError(w, r, s.ErrorCode)
 		default:
-			http.Error(w, "Invalid server type", http.StatusInternalServerError)
+			http.Error(w, "default server response", http.StatusInternalServerError)
+			log.Error("unhandled server type: %s from %s", s.Type, r.RemoteAddr)
 		}
 	})
 
 	addr := fmt.Sprintf(":%d", s.Port)
-	log.Printf("[%s] port: %d,  type: %s, Started: %s (%d)\n", s.Name, s.Port, s.Type, s.Duration, s.TimeoutSeconds)
+
 	// Create a new http.Server
 	srv := &http.Server{
 		Addr:    addr,
 		Handler: mux,
 	}
 
+	log.Info("Start server '%s' type: %s, datalen: %d, %s (%d)", s.Name, s.Type, s.DataLength, s.Duration, s.TimeoutSeconds)
+
 	switch s.Duration {
 	case "continuous":
 		srv.ListenAndServe()
-	case "timed":
+	case "timeout":
 		go func() {
 			srv.ListenAndServe()
-			time.Sleep(time.Duration(s.TimeoutSeconds) * time.Second)
-			log.Printf("[%s] port: %d Stopped after %d seconds.\n", s.Name, s.Port, s.TimeoutSeconds)
 			// You may add additional cleanup logic here if needed
 		}()
-	case "timeout":
+
+		// Start a timer to check for inactivity
+		timer := time.NewTimer(s.inactivityDur)
+
+		for {
+			select {
+			case <-s.ActivityChan:
+				// Reset the timer on activity
+				timer.Reset(s.inactivityDur)
+
+			case <-timer.C:
+				// No activity for the specified duration, stop the server
+				s.lock.Lock()
+				lastActivityDuration := time.Since(s.lastActivity)
+				s.lock.Unlock()
+
+				if lastActivityDuration >= s.inactivityDur {
+					log.Info("Stop server '%s' after %d seconds of inactivity", s.Name, s.TimeoutSeconds)
+					s.Stop()
+					return
+				}
+
+			case <-s.stopChan:
+				// Stop the server if requested
+				log.Info("Server '%s' stopping...", s.Name)
+				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+
+				if err := srv.Shutdown(ctx); err != nil {
+					log.Info("Error shutting down server '%s' : %v", s.Name, err)
+				}
+				log.Info("Server '%s' stopped.", s.Name)
+				return
+			}
+		}
+
+	case "timed":
 		go func() {
 			for {
 				select {
 				case <-time.After(time.Duration(s.TimeoutSeconds) * time.Second):
-					log.Printf("[%s] port: %d Stopped after %d seconds of inactivity.\n", s.Name, s.Port, s.TimeoutSeconds)
+					log.Info("Stop timed server '%s' after %d seconds", s.Name, s.TimeoutSeconds)
 					// You may add additional cleanup logic here if needed
 					return
 				}
 			}
 		}()
 	default:
-		log.Printf("[%s] port: %d Invalid duration: %s\n", s.Name, s.Port, s.Duration)
+		log.Info("invalid duration: %s", s.Duration)
 	}
 
+}
+
+// Stop stops the inactivity server.
+func (s *Server) Stop() {
+	s.stopChan <- true
 }
 
 func handleMessage(w http.ResponseWriter, r *http.Request, message string) {
@@ -147,7 +229,7 @@ func handleRandom(w http.ResponseWriter, r *http.Request, dataLength int) {
 }
 
 func handleError(w http.ResponseWriter, r *http.Request, errorCode int) {
-	http.Error(w, "Error response", errorCode)
+	http.Error(w, fmt.Sprintf("%d: %s", errorCode, http.StatusText(errorCode)), errorCode)
 }
 
 func generateRandomData(length int) []byte {

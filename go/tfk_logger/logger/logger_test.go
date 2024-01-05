@@ -17,7 +17,7 @@ func TestLogger(t *testing.T) {
 	log.SetOutput(&buf)
 
 	// Create a logger with the INFO log level
-	logger := NewLogger(Info)
+	logger := NewLogger("logger_test", Info)
 
 	// Log messages at different levels
 	logger.Trace("This is a trace message.")
