@@ -27,7 +27,7 @@ func main() {
 	// Create and start server modules
 	for _, serverConfig := range serversConfig.Servers {
 
-		serverModule := server.NewServer(
+		server := server.NewServer(
 			serverConfig.Port,
 			serverConfig.Name,
 			serverConfig.Type,
@@ -39,7 +39,7 @@ func main() {
 			logLevel,
 		)
 
-		go serverModule.Run()
+		go server.Run()
 	}
 
 	// Create clients
@@ -78,7 +78,6 @@ func main() {
 	// Keep the main program running
 	select {}
 
-	log.Info("All servers and clients have finished.")
 }
 
 func init() {
