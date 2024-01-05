@@ -3,7 +3,10 @@ package client
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
 // ClientConfig represents client configuration
@@ -44,7 +47,25 @@ func GetConfigFilePath() string {
 		return envVar
 	}
 
+	defaultFileRelPath := "data/input/tfk_clients_config.json"
 	// If not set, use a default value
-	return "data/input/tfk_clients_config.json"
+	projectRoot, err := os.Getwd()
+	if err != nil {
+		fmt.Println("Error getting working directory:", err)
+		os.Exit(1)
+	}
+
+	// Find the first occurrence of "traffik" in the current directory path
+	index := strings.Index(projectRoot, "traffik")
+
+	// If "traffik" is found, truncate the string to keep only the part before it
+	if index != -1 {
+		projectRoot = projectRoot[:index+len("traffik")]
+	}
+
+	// Construct the absolute path to the default input file
+	defaultFilePath := filepath.Join(projectRoot, defaultFileRelPath)
+
+	return defaultFilePath
 
 }

@@ -23,7 +23,7 @@ set(EXECUTABLE_SOURCES
 
 # Additional source files for microservice
 set(MICROSERVICE_SOURCES
-    cpp/src/microservices/cpp-mircoservice/main.cc
+    cpp/src/microservices/cpp-microservice/main.cc
     # Add more microservice-specific source files as needed
 )
 

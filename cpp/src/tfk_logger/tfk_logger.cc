@@ -1,6 +1,7 @@
 
 #include "tfk_logger.h"
 #include <iostream>
+#include <chrono>
 
 #ifdef USE_SPDLOG
 #include "spdlog/spdlog.h"

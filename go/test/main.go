@@ -57,7 +57,7 @@ func main() {
 	// Keep the main program running
 	select {}
 
-	log.Info("All servers and clients have finished.")
+	// log.Info("All servers and clients have finished.")
 }
 
 func init() {

@@ -1,0 +1,24 @@
+# Use an official Go runtime as a parent image
+FROM golang:1.17-alpine AS go_builder
+
+# Set the working directory to /app
+WORKDIR /app
+
+# Copy the Go module files and dependencies
+COPY go.mod .
+COPY go.sum .
+
+# Download and install Go dependencies
+RUN go mod download
+
+# Copy the source code into the container
+COPY . .
+
+# Build the Go application
+RUN go build -o traffik main.go
+
+# Use a minimal base image for the final image
+FROM alpine:latest
+
+# Set the working directory to /app
+WORKDIR /app

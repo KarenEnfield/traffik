@@ -17,7 +17,7 @@ func main() {
 	// Create servers
 	configFilePath := server.GetConfigFilePath()
 
-	// Read the configuration from the JSON "../data/input/tfk_clients_config.json")
+	// Read the configuration from the JSON "../data/input/tfk_servers_config.json")
 	serversConfig, err := server.ReadConfig(configFilePath)
 	if err != nil {
 		log.Critical(err.Error())
