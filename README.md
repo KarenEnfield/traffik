@@ -4,6 +4,8 @@ Network traffic generator
 Traffik allows the creation of clients that send requests to servers, and the creation of servers that respond to clients. Clients and Servers are created from reading a json file. Clients may run a number of times, or indefinitely.
 Servers may respond with an error code or an html page of a message or random bytes of a particular length Servers may remain running indefinitely, or until an inactivity timeout has been reached
 
+
+
 Dependencies C++ compilation: 
 libuv must be installed for compilation: brew install libuv 
 optional: spdlog can be installed for logging: brew install spdlog 
@@ -110,3 +112,12 @@ traffik/
 |-- README.md
 |-- LICENSE
 |-- ...
+
+Docker Go Build
+    % docker build -t traffik/go-app:1.0 -f Dockerfile_go .
+
+Docker C++ Build
+    % docker build -t traffik/cpp-app:1.0 -f Dockerfile .
+
+Troubleshooting Docker if traffik not found
+    docker run -it --rm --volumes-from <container_name_or_id> busybox ls /path/to/directory

@@ -1,5 +1,5 @@
 # Use an official C++ runtime as a parent image
-FROM gcc:latest AS cpp_builder
+FROM gcc:latest
 
 # Set the working directory to /app
 WORKDIR /app
@@ -24,14 +24,11 @@ RUN g++ -o traffik \
     tfk_servers/tfk_servers.cc \
     tfk_logger/tfk_logger.cc 
 
-# Use a minimal base image for the final image
-FROM alpine:latest
+# Expose the port the application runs on
+EXPOSE 9095
 
-# Set the working directory to /app
-WORKDIR /app
-
-# Copy the compiled executable from the previous stage
-COPY --from=cpp_builder /app/traffik .
+# Copy the data folder
+COPY ./data/input /app/data/input
 
 # Run the application
 CMD ["./traffik"]

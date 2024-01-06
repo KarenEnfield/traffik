@@ -1,24 +1,26 @@
 # Use an official Go runtime as a parent image
-FROM golang:1.17-alpine AS go_builder
+FROM golang:latest
 
 # Set the working directory to /app
 WORKDIR /app
 
 # Copy the Go module files and dependencies
 COPY go.mod .
-COPY go.sum .
 
 # Download and install Go dependencies
 RUN go mod download
 
-# Copy the source code into the container
+# Copy the Go source code into the container
 COPY . .
 
 # Build the Go application
-RUN go build -o traffik main.go
+RUN go build -o traffik ./main 
 
-# Use a minimal base image for the final image
-FROM alpine:latest
+# Expose the port the application runs on
+EXPOSE 9096
 
-# Set the working directory to /app
-WORKDIR /app
+# Copy the data folder
+COPY /data/input /app/data/input
+
+# Run the application
+CMD ["./traffik"]

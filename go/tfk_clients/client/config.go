@@ -42,7 +42,7 @@ func ReadConfig(filename string) (*ClientsConfig, error) {
 // GetConfigFilePath returns the JSON file path from the environment variable or a default value
 func GetConfigFilePath() string {
 	// Check if the environment variable is set
-	envVar := os.Getenv("CONFIG_FILE_PATH")
+	envVar := os.Getenv("TFK_CONFIG_FILE_PATH")
 	if envVar != "" {
 		return envVar
 	}
@@ -61,6 +61,7 @@ func GetConfigFilePath() string {
 	// If "traffik" is found, truncate the string to keep only the part before it
 	if index != -1 {
 		projectRoot = projectRoot[:index+len("traffik")]
+		projectRoot += "/go"
 	}
 
 	// Construct the absolute path to the default input file

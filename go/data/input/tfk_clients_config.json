@@ -1,0 +1,46 @@
+{
+    "clients": [
+        {
+            "name": "google1",
+            "url": "www.google.com",
+            "rate": 1,
+            "message": "Hello World!",
+            "max_sends": -1
+        },
+        {
+            "name": "google2",
+            "url": "www.google.com",
+            "rate": 1,
+            "message": "Hello World!",
+            "max_sends": 30
+        },
+        {
+            "name": "amazon1",
+            "url": "www.amazon.com",
+            "rate": 1,
+            "message": "Hello World!",
+            "max_sends": 30
+        }, 
+        {
+            "name": "clocal:5001",
+            "url": "localhost:5001",
+            "rate": 1,
+            "message": "Hello World!",
+            "max_sends": 30
+        }, 
+        {
+            "name": "clocalhost",
+            "url": "localhost",
+            "rate": 1,
+            "message": "Hello World!",
+            "max_sends": 30
+        }, 
+        {
+            "name": "cServer3",
+            "url": "localhost:8083",
+            "rate": 1,
+            "message": "Hello World!",
+            "max_sends": 30
+        } 
+    ]
+}

@@ -152,10 +152,20 @@ void on_read(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
     free(buf->base);
 }
 
-
 tfk_clients::tfk_clients(uv_loop_t * dl):loop(dl==nullptr?uv_default_loop():dl)
 {
-    std::string filename = "../data/input/tfk_clients_config.json";
+    // Get the value of the TFK_CONFIG_FILE_PATH environment variable
+    const char* configFilePath = std::getenv("TFK_CONFIG_FILE_PATH");
+    std::string filename = "./data/input/tfk_clients_config.json";
+
+    if (configFilePath) {
+        // Print the retrieved value
+        std::cout << "TFK_CONFIG_FILE_PATH: " << filename << std::endl;
+
+        // Now you can use 'configFilePath' in your code
+        filename = configFilePath;
+    } 
+
     std::ifstream file(filename.c_str());
     if (!file.is_open()) {
         std::cerr << "Failed to open config.json" << std::endl;

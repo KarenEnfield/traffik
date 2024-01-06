@@ -54,10 +54,10 @@ func main() {
 	// Wait for servers and clients to finish
 	wg1.Wait()
 
+	log.Info("All servers and clients are running")
 	// Keep the main program running
 	select {}
 
-	// log.Info("All servers and clients have finished.")
 }
 
 func init() {

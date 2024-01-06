@@ -16,6 +16,7 @@ func main() {
 
 	// Create servers
 	configFilePath := server.GetConfigFilePath()
+	log.Info("[servers] configuration: %s", configFilePath)
 
 	// Read the configuration from the JSON "../data/input/tfk_servers_config.json")
 	serversConfig, err := server.ReadConfig(configFilePath)
@@ -44,6 +45,7 @@ func main() {
 
 	// Create clients
 	configFilePath = client.GetConfigFilePath()
+	log.Info("[clients] configuration: %s", configFilePath)
 
 	// Read the configuration from the JSON "../data/input/tfk_clients_config.json")
 	clientsConfig, err := client.ReadConfig(configFilePath)

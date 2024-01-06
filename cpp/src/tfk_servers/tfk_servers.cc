@@ -235,14 +235,7 @@ void on_signal_server(uv_signal_t* handle, int signum) {
     ServerConfig *serverConfig =  static_cast<ServerConfig*>(uv_handle_get_data(reinterpret_cast<uv_handle_t*>(&handle)));
     std::cerr << "Received Ctrl+C. Cleaning up servers and exiting..." << std::endl;
     serverConfig->log->logInfo("Received Ctrl+C. Cleaning up servers and exiting...");
-    //std::string message = "Received Ctrl+C. Cleaning up and exiting...\n";
-    //write(STDERR_FILENO, message.c_str(), message.length());
     
-    // Close the server handle and stop the event loop
-    // uv_close(reinterpret_cast<uv_handle_t*>(&handle), on_server_closed);
-
-    
-    // moved it here from below
     uv_signal_stop(handle);
 
     // Stop the event loop when a SIGINT signal is received
@@ -253,7 +246,18 @@ void on_signal_server(uv_signal_t* handle, int signum) {
 
 tfk_servers::tfk_servers(uv_loop_t* dl):loop(dl==nullptr?uv_default_loop():dl) {
 
-    std::string filename = "../data/input/tfk_servers_config.json";
+    std::string filename = "./data/input/tfk_servers_config.json";
+    // Get the value of the TFK_CONFIG_FILE_PATH environment variable
+    const char* configFilePath = std::getenv("TFK_CONFIG_FILE_PATH");
+    
+    if (configFilePath) {
+        // Print the retrieved value
+        std::cout << "TFK_CONFIG_FILE_PATH: " << filename << std::endl;
+
+        // Now you can use 'configFilePath' in your code
+        filename = configFilePath;
+    } 
+
     // Read server configurations from a JSON file
     std::ifstream config_file(filename.c_str());
     if (!config_file) {
