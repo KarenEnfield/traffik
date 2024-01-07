@@ -1,23 +1,18 @@
 # traffik
 
-traffik is a network traffic generator
+Traffik is a network traffic generator
 
-Traffik allows the creation of clients that send messages to servers, and the creation of servers that respond to clients.
+Traffik creates clients that send periodic messages to urls, and  servers that respond to requests, as determined by a predefined JSON file.  Clients and servers may also be created by Traffik that send and respond to one another!
 
-Clients and servers may be created that send and respond to one another!
+Clients may be configured to send a fixed or indefinite number of messages at a predefined rate.
 
-Clients and Servers are configured by json definitions. 
+Servers may be configured to respond with an either fixed html page, a randomized return page of a fixed length of bytes, or with an http error code.  
 
-Clients may be configured to send a fixed number of messages, or indefinitely at a specified rate.
+Servers may be also configured to either run indefinitely, or for a specified amount of time, or until an inactivity timeout has been reached.
 
-Servers may be configured to respond with an fixed html page, a randomized return page of a fixed length of bytes, or with an http error code.  
-Servers may be also configured to either run indefinitely, or for a specified amount of time, or until an inactivity timeout has been met.
+In C++ version of Traffik, default traffik runs a server on 8080 indefinitely, and a client is created that sends 10 messages to server at 127.0.0.1:8080, unless a TFK_CONFIG environment variable specifies a JSON file to customize the list of clients and servers
 
-In C++ build, default traffik runs a server on 8080 indefinitely, and a client is created that sends 10 messages to server at 127.0.0.1:8080
-
-In Go build, default traffic is obtained through predefined go/input/data json files (included)
-
-This assumes a TFK_CONFIG environment variable has not been set.
+In Go build, default traffic is obtained through 2 predefined go/input/data json files (included), unless TFK_CONFIG environment variable specifies a JSON file to customize the list of clients and servers. 
 
 ## Configuration
 
@@ -40,7 +35,7 @@ If spdlog is not prefered, in tfk_logging.h comment out line //#ifdef USE_SPDLOG
 ## Docker C++ Build
 
     traffik/cpp>  %  docker build -t traffik -f Dockerfile .
-    
+
 
 ## Standalone C++ Visual Studio (MacOS)
 There is a CMakeLists.txt in the traffik folder that references the subfolder /cpp which also contains a CMakeLists.txt 
