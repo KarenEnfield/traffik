@@ -1,6 +1,5 @@
 #include <cstdlib>
 #include <uv.h>
-//#include "tfk_logger.h"
 class tfk_servers{
     uv_loop_t *loop;
 

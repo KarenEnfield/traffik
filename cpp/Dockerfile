@@ -28,7 +28,7 @@ RUN g++ -o traffik \
 EXPOSE 9095
 
 # Copy the data folder
-COPY ./data/input /app/data/input
+COPY ./data/input /data/input
 
 # Run the application
 CMD ["./traffik"]

@@ -42,7 +42,7 @@ func ReadConfig(filename string) (*ClientsConfig, error) {
 // GetConfigFilePath returns the JSON file path from the environment variable or a default value
 func GetConfigFilePath() string {
 	// Check if the environment variable is set
-	envVar := os.Getenv("TFK_CONFIG_FILE_PATH")
+	envVar := os.Getenv("TFK_CONFIG")
 	if envVar != "" {
 		return envVar
 	}

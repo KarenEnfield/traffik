@@ -4,14 +4,21 @@
 #include "tfk_servers/tfk_servers.h"
 
 #include <uv.h>
-
+#include <iostream>
 int main(){
 
-    tfk_clients c;
-    tfk_servers s;
-    // run something after the clients and servers are set up
-    // uv_run(uv_default_loop(), UV_RUN_DEFAULT);
-    c.run();
-    s.run();
+try{
+    uv_loop_t *lp = uv_default_loop();
+    tfk_clients c(lp);
+    tfk_servers s(lp);
+    
+    //c.run();
+    //s.run();
+    uv_run(lp, UV_RUN_DEFAULT);
+}
+catch(const std::exception& e)
+{
+    std::cerr<< "caught in main" <<e.what()<<std::endl;
+}
     
 }

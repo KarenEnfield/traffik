@@ -24,7 +24,7 @@ class tfk_logger{
  #ifdef USE_SPDLOG       
         console_logger_->debug(message);
  #else
-        std::cerr <<"[" << get_current_time() << "] [" << console_name_ << "]" << "[debug] "<< message << std::endl;
+        std::cerr <<"[" << get_current_time() << "] [" << console_name_ << "][debug] "<< message << std::endl;
  #endif    
 
     }
@@ -40,7 +40,7 @@ class tfk_logger{
         // If not defined, use std::cerr
         std::stringstream formattedMessage;
         logMultipleVariables(formattedMessage, message, arg1, args...);
-        std::cerr << "[" << get_current_time() << "] [" << console_name_ << "] [debug]: " << formattedMessage.str() << std::endl;
+        std::cerr << "[" << get_current_time() << "] [" << console_name_ << "][debug] " << formattedMessage.str() << std::endl;
 #endif
     }
 
@@ -49,7 +49,7 @@ class tfk_logger{
  #ifdef USE_SPDLOG       
         console_logger_->info(message);
  #else
-        std::cerr <<"[" << get_current_time() << "] [" << console_name_ << "]" << "[info] "<< message << std::endl;
+        std::cerr <<"[" << get_current_time() << "] [" << console_name_ << "][info]  "<< message << std::endl;
  #endif    
 
     }
@@ -65,7 +65,7 @@ class tfk_logger{
         // If not defined, use std::cerr
         std::stringstream formattedMessage;
         logMultipleVariables(formattedMessage, message, arg1, args...);
-        std::cerr << "[" << get_current_time() << "] [" << console_name_ << "] [info]: " << formattedMessage.str() << std::endl;
+        std::cerr << "[" << get_current_time() << "] [" << console_name_ << "][info]  " << formattedMessage.str() << std::endl;
 #endif
     }
 
@@ -73,7 +73,7 @@ class tfk_logger{
  #ifdef USE_SPDLOG           
         console_logger_->warn(message);
  #else
-        std::cerr <<"[" << get_current_time() << "] [" << console_name_ << "]" << "[warning] "<< message << std::endl;      
+        std::cerr <<"[" << get_current_time() << "] [" << console_name_ << "][warn]  "<< message << std::endl;      
  #endif       
     }
 
@@ -85,7 +85,7 @@ class tfk_logger{
         // If not defined, use std::cerr
         std::stringstream formattedMessage;
         logMultipleVariables(formattedMessage, message, arg1, args...);
-        std::cerr << "[" << get_current_time() << "] [" << console_name_ << "] [warning]: " << formattedMessage.str() << std::endl;
+        std::cerr << "[" << get_current_time() << "] [" << console_name_ << "][warn]  " << formattedMessage.str() << std::endl;
 
     #endif
     }
@@ -94,7 +94,7 @@ class tfk_logger{
     #ifdef USE_SPDLOG    
         console_logger_->error(message);
     #else
-        std::cerr <<"[" << get_current_time() << "] [" << console_name_ << "]" << "[warning] "<< message << std::endl;  
+        std::cerr <<"[" << get_current_time() << "] [" << console_name_ << "][ERROR] "<< message << std::endl;  
     #endif     
     }
 
@@ -106,7 +106,7 @@ class tfk_logger{
         // If not defined, use std::cerr
         std::stringstream formattedMessage;
         logMultipleVariables(formattedMessage, message, arg1, args...);
-        std::cerr << "[" << get_current_time() << "] [" << console_name_ << "] [ERROR]: " << formattedMessage.str() << std::endl;
+        std::cerr << "[" << get_current_time() << "] [" << console_name_ << "][ERROR] " << formattedMessage.str() << std::endl;
     #endif    
     }
 
@@ -114,7 +114,7 @@ class tfk_logger{
     #ifdef USE_SPDLOG    
         console_logger_->critical(message);
     #else
-        std::cerr <<"[" << get_current_time() << "] [" << console_name_ << "]" << "[critical] "<< message << std::endl;
+        std::cerr <<"[" << get_current_time() << "] [" << console_name_ << "][CRITICAL] "<< message << std::endl;
     #endif    
     }
 
@@ -126,7 +126,7 @@ class tfk_logger{
         // If not defined, use std::cerr
         std::stringstream formattedMessage;
         logMultipleVariables(formattedMessage, message, arg1, args...);
-        std::cerr << "[" << get_current_time() << "] [" << console_name_ << "] [CRITICAL]: " << formattedMessage.str() << std::endl;
+        std::cerr << "[" << get_current_time() << "] [" << console_name_ << "][CRITICAL] " << formattedMessage.str() << std::endl;
 
     #endif
     }
