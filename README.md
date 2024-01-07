@@ -1,23 +1,60 @@
 # traffik
-Network traffic generator
 
-Traffik allows the creation of clients that send requests to servers, and the creation of servers that respond to clients. Clients and Servers are created from reading a json file. Clients may run a number of times, or indefinitely.
-Servers may respond with an error code or an html page of a message or random bytes of a particular length Servers may remain running indefinitely, or until an inactivity timeout has been reached
+traffik is a network traffic generator
 
-In C++ build, default traffic is a server on 8080 continuously running, and a client that sends 10 messages to server at 127.0.0.1:8080
-In Go build, default traffic is obtained through predefined go/input/data json files
+Traffik allows the creation of clients that send messages to servers, and the creation of servers that respond to clients.
 
-To override the default traffic, assign environment variable TFK_CONFIG to the configuration path file, where clients and servers are defined by their json format.  The respective "data/input" folders have two json files demonstrating client and server json samples, and are installed by both Dockerfiles in a /data/input folder for convenience.  You may add your own json files in this folder and set the TFK_CONFIG environment variable to configure both clients and servers from one file.
+Clients and servers may be created that send and respond to one another!
 
-Logging levels have not yet been made customizable yet and are currently set at log.Info level.
+Clients and Servers are configured by json definitions. 
+
+Clients may be configured to send a fixed number of messages, or indefinitely at a specified rate.
+
+Servers may be configured to respond with an fixed html page, a randomized return page of a fixed length of bytes, or with an http error code.  
+Servers may be also configured to either run indefinitely, or for a specified amount of time, or until an inactivity timeout has been met.
+
+In C++ build, default traffik runs a server on 8080 indefinitely, and a client is created that sends 10 messages to server at 127.0.0.1:8080
+
+In Go build, default traffic is obtained through predefined go/input/data json files (included)
+
+This assumes a TFK_CONFIG environment variable has not been set.
+
+## Configuration
+
+To override the default traffic, define an environment variable TFK_CONFIG to the configuration path file, a JSON file where clients and servers are pre-defined.  
+
+The "data/input" folders have two json files demonstrating client and server json samples, and are installed by both Dockerfiles for useage.  You may add your own json files in this folder to be copied, and set the TFK_CONFIG environment variable to create both clients and servers from one file.
+
+Logging levels have not yet been made customizable and are currently set at log.Info level.
 
 
-Dependencies C++ compilation: 
-libuv must be installed for compilation: brew install libuv 
-optional: spdlog can be installed for logging: brew install spdlog 
+
 If spdlog is not prefered, in tfk_logging.h comment out line //#ifdef USE_SPDLOG and recompile to use source code's own debugging
 
-File structure:
+
+## Docker Go Build
+
+    traffik/go>   %  docker build -t traffik -f Dockerfile .
+    
+
+## Docker C++ Build
+
+    traffik/cpp>  %  docker build -t traffik -f Dockerfile .
+    
+
+## Standalone C++ Visual Studio (MacOS)
+There is a CMakeLists.txt in the traffik folder that references the subfolder /cpp which also contains a CMakeLists.txt 
+
+# Prerequisite to C++ compilation
+C++17 is used
+libuv must be installed for C++ compilation: 
+    %   brew install libuv 
+
+optional: spdlog can be installed for logging if SPDLOG is defined before compiling, otherwise, an in-house logging is used: 
+    %   brew install spdlog 
+
+
+## File structure:
 
 traffik/
 |-- CMakeLists.txt  # The root CMakeLists.txt file
@@ -131,15 +168,7 @@ traffik/
 |-- CMakeLists.txt (project file)
 |-- ...
 
-Docker Go Build
 
-    traffik/go   % docker build -t traffik -f Dockerfile .
-    
-
-Docker C++ Build
-
-    traffik/cpp  % docker build -t traffik -f Dockerfile .
-
-Modify COn    
+  
     
 
