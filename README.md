@@ -1,6 +1,6 @@
 # traffik
 
-Traffik is a network traffic generator
+Traffik is a network traffic generator, creating tcp network traffic for the purposes of observability.
 
 Traffik creates clients that send periodic messages to urls, and  servers that respond to requests, as determined by a predefined JSON file.  Clients and servers may also be created by Traffik that send and respond to one another!
 
