@@ -1,5 +1,4 @@
 #include "tfk_clients.h"
-#include "../tfk_common.h"
 #include "../tfk_logger/tfk_logger.h"
 
 #include <iostream>
@@ -42,6 +41,17 @@ void on_write(uv_write_t* req, int status);
 void on_close(uv_handle_t* handle);
 void on_timer(uv_timer_t* timer);
 void on_read(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf);
+
+static void alloc_buffer(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
+    // Allocate a buffer for reading data
+    buf->base = static_cast<char*>(malloc(suggested_size));
+    buf->len = suggested_size;
+}
+
+struct BufferData {
+    uv_tcp_t* client;
+    std::vector<char> data;
+};
 
 void on_connect(uv_connect_t* req, int status) {
 

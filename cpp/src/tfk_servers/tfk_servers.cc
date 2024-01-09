@@ -1,5 +1,4 @@
 #include "tfk_servers.h"
-#include "../tfk_common.h"
 #include "../tfk_logger/tfk_logger.h"
 
 #include <cstdlib>
@@ -15,6 +14,13 @@
 using json = nlohmann::json;
 
 // Structure to hold server configuration
+
+
+
+struct BufferData {
+    uv_tcp_t* client;
+    std::vector<char> data;
+};
 struct ServerConfig {
     uv_loop_t *loop;
     std::string name;       // Unique name for the server
@@ -34,7 +40,27 @@ struct ServerConfig {
     std::string httpResponse; // Response string  
 };
 
-void on_server_closed(uv_handle_t* handle);
+static void alloc_buffer(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
+    // Allocate a buffer for reading data
+    buf->base = static_cast<char*>(malloc(suggested_size));
+    buf->len = suggested_size;
+}
+
+// Callback for when the server handle is closed
+void on_server_closed(uv_handle_t* handle) {
+    ServerConfig* serverConfig = static_cast<ServerConfig*>(uv_handle_get_data(handle));
+
+    // std::cerr << "Server " << serverConfig->name << " has stopped." << std::endl;
+    serverConfig->log->logInfo("Server stopped");
+    serverConfig->isServerRunning = false; // Update the flag
+    
+    // Stop the timeout timer if it's still active
+    uv_timer_stop(&serverConfig->timeoutTimer);
+
+    free(serverConfig);
+}
+
+
 
 // Callback for handling HTTP requests
 void on_http_request(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
@@ -182,20 +208,6 @@ void on_connection(uv_stream_t* server, int status) {
     } else {
         uv_close(reinterpret_cast<uv_handle_t*>(client), nullptr);
     }
-}
-
-// Callback for when the server handle is closed
-void on_server_closed(uv_handle_t* handle) {
-    ServerConfig* serverConfig = static_cast<ServerConfig*>(uv_handle_get_data(handle));
-
-    // std::cerr << "Server " << serverConfig->name << " has stopped." << std::endl;
-    serverConfig->log->logInfo("Server stopped");
-    serverConfig->isServerRunning = false; // Update the flag
-    
-    // Stop the timeout timer if it's still active
-    uv_timer_stop(&serverConfig->timeoutTimer);
-
-    free(serverConfig);
 }
 
 
