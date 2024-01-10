@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include <fstream>
-#include <cstdlib>
 #include <vector>
 #include <string>
 #include <memory>
@@ -110,7 +109,6 @@ void on_timer(uv_timer_t* timer) {
     
     uv_tcp_t* handle = clientConfig->handle.get();
     
-    
     // Stop continuous sending if consecutive failures exceed a threshold
     const int maxconsecutive_failures = -1;
     if (maxconsecutive_failures>0 && clientConfig->consecutive_failures >= maxconsecutive_failures) {
@@ -207,7 +205,7 @@ tfk_clients::tfk_clients(uv_loop_t * dl):loop(dl==nullptr?uv_default_loop():dl)
         {
           "clients":[
             {
-              "name": "default",
+              "name": "client",
               "url": "127.0.0.1:8080",
               "rate": 1,
               "message": "Hello World",
@@ -318,7 +316,7 @@ tfk_clients::tfk_clients(uv_loop_t * dl):loop(dl==nullptr?uv_default_loop():dl)
         clientConfig->successful_sends = 0;
         clientConfig->consecutive_failures = 0;
         clientConfig->total_sends = 0;
-            // Create tcp client handle
+        // Create tcp client handle
         clientConfig->handle = std::make_unique<uv_tcp_t>();
 
         // Add client handle to uv loop for scheduling
@@ -340,9 +338,8 @@ tfk_clients::tfk_clients(uv_loop_t * dl):loop(dl==nullptr?uv_default_loop():dl)
         clientConfig->write_req.get()->data = clientConfig;
 
         // Set the timer data
-       // clientConfig->timer.get()->data = (void *)clientConfig->name.c_str(); // Use the name as the key
+        // clientConfig->timer.get()->data = (void *)clientConfig->name.c_str(); // Use the name as the key
         uv_handle_set_data(reinterpret_cast<uv_handle_t*>(clientConfig->timer.get()), clientConfig);
-
 
         // Start the timer
         status = uv_timer_start(clientConfig->timer.get(), on_timer, 0, static_cast<uint64_t>(1e3 / clientConfig->rate));  

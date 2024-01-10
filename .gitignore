@@ -19,6 +19,7 @@ package-lock.json
 yarn.lock
 node_modules
 .vscode/
+/build/
 .idea/
 *.suo
 *.ntvs

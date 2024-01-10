@@ -1,7 +1,6 @@
 #include "tfk_servers.h"
 #include "../tfk_logger/tfk_logger.h"
 
-#include <cstdlib>
 #include <iostream>
 #include <fstream>
 #include <format>
@@ -14,9 +13,6 @@
 using json = nlohmann::json;
 
 // Structure to hold server configuration
-
-
-
 struct BufferData {
     uv_tcp_t* client;
     std::vector<char> data;
@@ -40,17 +36,16 @@ struct ServerConfig {
     std::string httpResponse; // Response string  
 };
 
-static void alloc_buffer(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
-    // Allocate a buffer for reading data
-    buf->base = static_cast<char*>(malloc(suggested_size));
-    buf->len = suggested_size;
-}
+//static void alloc_buffer_(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
+//    // Allocate a buffer for reading data
+//    buf->base = static_cast<char*>(malloc(suggested_size));
+//    buf->len = suggested_size;
+//}
 
 // Callback for when the server handle is closed
 void on_server_closed(uv_handle_t* handle) {
     ServerConfig* serverConfig = static_cast<ServerConfig*>(uv_handle_get_data(handle));
 
-    // std::cerr << "Server " << serverConfig->name << " has stopped." << std::endl;
     serverConfig->log->logInfo("Server stopped");
     serverConfig->isServerRunning = false; // Update the flag
     
@@ -60,8 +55,6 @@ void on_server_closed(uv_handle_t* handle) {
     free(serverConfig);
 }
 
-
-
 // Callback for handling HTTP requests
 void on_http_request(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
     
@@ -69,9 +62,7 @@ void on_http_request(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
     ServerConfig* serverConfig = static_cast<ServerConfig*>(uv_handle_get_data(reinterpret_cast<uv_handle_t*>(stream)));
 
     if (nread > 0) {
-        
         try {
-            
             // Append received data to the buffer
             serverConfig->bufferData.data.insert(serverConfig->bufferData.data.end(), buf->base, buf->base + nread);
             
@@ -127,7 +118,6 @@ void on_http_request(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
                     return;
                 }
 
-                
                 // Write the response back to the client
                 uv_write_t* write_req = new uv_write_t;
                 uv_write(write_req, stream, &response, 1, nullptr);
@@ -163,7 +153,6 @@ void on_http_request(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
             std::cerr << "Config parsing error: " << e.what() << std::endl;
             serverConfig->log->logError("config parsig error {}", e.what());
             uv_close(reinterpret_cast<uv_handle_t*>(stream), on_server_closed);
-            
         }
 
     } else if (nread < 0) {
@@ -274,7 +263,7 @@ tfk_servers::tfk_servers(uv_loop_t* dl):loop(dl==nullptr?uv_default_loop():dl) {
         {
           "servers":[
             {
-              "name": "default",
+              "name": "server",
               "port": 8080,
               "type": "message",
               "message": "Hello_World!",
@@ -305,7 +294,6 @@ try{
         
         std::unique_ptr<tfk_logger> log_ptr = std::make_unique<tfk_logger>(name);
            
-        
         // Safely check for the existence of other keys
         if (auto it = config.find("type"); it != config.end() && it->is_string()) {
             type = *it;
@@ -342,7 +330,6 @@ try{
             duration = *it;
         } else {
             log_ptr->logWarn("missing of invalid 'duration' key; using default {}", duration);
-            //continue;
         }
 
         if (duration!="continuous")
@@ -351,8 +338,7 @@ try{
                 timeout_seconds = *it;
             } else {
                 log_ptr->logWarn("missing or invalid 'timeout_seconds' key; uing default {}",timeout_seconds );
-                //continue;
-            }
+           }
         }
 
         // Create server only if all required keys are present

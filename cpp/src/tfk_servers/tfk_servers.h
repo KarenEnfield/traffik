@@ -5,6 +5,6 @@ class tfk_servers{
 
     public:
         tfk_servers(uv_loop_t *dl=nullptr);
-        void run(){uv_run(loop, UV_RUN_DEFAULT);}
-        void stop(){uv_stop(loop);};
+        void Run(){uv_run(loop, UV_RUN_DEFAULT);}
+        void Stop(){uv_stop(loop);};
 };

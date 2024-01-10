@@ -21,10 +21,9 @@ To override the default Traffik behavior, define an environment variable TFK_CON
 The "data/input" folders have two JSON files demonstrating client and server JSON samples, and are installed by both Dockerfiles for useage.  You may add your own JSON files in this folder to be copied, and set the TFK_CONFIG environment variable to create both clients and servers from one file.
 
 ## Logging 
-Logging levels have not yet been made customizable and are currently set at log.Info level.
-
-## spdlog (optional)
-Spdlog is an open source dependency for logging.  A version that does not use spdlog, but the internally developed logging, is the default. If spdlog is prefered, in tfk_logging.h comment out line //#ifdef USE_SPDLOG and recompile to use source code's own debugging
+Logging levels are set at log.Info level by default.
+TFK_LOG_LEVEL may be specified in the enviroment to 
+"trace", "debug", "info", "warn", "err", "critical", or "off".
 
 
 ## Docker Go Build
@@ -45,8 +44,11 @@ C++17 is used
 libuv must be installed for C++ compilation: 
     %   brew install libuv 
 
-optional: spdlog can be installed for logging if SPDLOG is defined before compiling, otherwise, an in-house logging is used: 
-    %   brew install spdlog 
+optional spdlog: the open source project "spdlog" can be installed and used for logging, otherwise traffik utilizes its own in-house logging mechanism by default.
+    Install it (macOS)
+        %   brew install spdlog 
+    CMakeLists.txt, uncomment this line
+        add_definitions(-DUSE_SPDLOG)
 
 
 ## File structure:
