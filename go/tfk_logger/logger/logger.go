@@ -44,20 +44,20 @@ func (l *Logger) logMessage(level LogLevel, format string, a ...interface{}) {
 	logPrefix := ""
 	switch level {
 	case Trace:
-		logPrefix = "[trace]"
+		logPrefix = "trace"
 	case Debug:
-		logPrefix = "[debug]"
+		logPrefix = "debug"
 	case Info:
-		logPrefix = "[info]"
+		logPrefix = "info"
 	case Warning:
-		logPrefix = "[warning]"
+		logPrefix = "warning"
 	case Error:
-		logPrefix = "[error]"
+		logPrefix = "error"
 	case Critical:
-		logPrefix = "[critical]"
+		logPrefix = "critical"
 	}
 	message := fmt.Sprintf(format, a...)
-	fullMessage := fmt.Sprintf("[%s]%s %s", l.name, logPrefix, message)
+	fullMessage := fmt.Sprintf(" [%s] [%s] %s", l.name, logPrefix, message)
 
 	log.Println(fullMessage)
 }
@@ -92,9 +92,32 @@ func (l *Logger) Critical(format string, a ...interface{}) {
 	l.logMessage(Critical, format, a...)
 }
 
+// GetConfigFilePath returns the JSON file path from the environment variable or a default value
+func GetLogLevel() LogLevel {
+	// Check if the environment variable is set
+	envVar := os.Getenv("TFK_LOG_LEVEL")
+
+	switch envVar {
+	case "trace":
+		return Trace
+	case "debug":
+		return Debug
+	case "info":
+		return Info
+	case "warning":
+		return Warning
+	case "error":
+		return Error
+	case "critical":
+		return Critical
+	}
+	return Info
+}
+
 func init() {
 	// Set log format to include date and time
 	log.SetFlags(log.LstdFlags)
+	// log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds)
 	// Set the log output to standard error
 	log.SetOutput(os.Stderr)
 }

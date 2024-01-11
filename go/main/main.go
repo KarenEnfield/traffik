@@ -10,8 +10,9 @@ import (
 )
 
 func main() {
-	logLevel := logger.Info
+	//logLevel := logger.Info
 
+	logLevel := logger.GetLogLevel()
 	log := logger.NewLogger("traffik", logLevel)
 
 	// Create servers

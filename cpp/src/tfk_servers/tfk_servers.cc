@@ -1,10 +1,10 @@
 #include "tfk_servers.h"
 #include "../tfk_logger/tfk_logger.h"
 
-#include <iostream>
-#include <fstream>
-#include <format>
 #include <chrono>
+#include <fstream>
+#include <iostream>
+#include <memory>
 #include <unistd.h>
 
 #include <uv.h>
@@ -12,35 +12,45 @@
 
 using json = nlohmann::json;
 
+static constexpr std::string_view kDefaultServer = R"(
+{
+    "servers":[
+    {
+        "name": "server",
+        "port": 8080,
+        "type": "message",
+        "message": "Hello_World!",
+        "data_length" : -1,
+        "error_code": 200,
+        "duration" : "continuous",
+        "timeout_seconds": -1
+    }
+    ]
+})";
+
 // Structure to hold server configuration
 struct BufferData {
     uv_tcp_t* client;
     std::vector<char> data;
 };
 struct ServerConfig {
-    uv_loop_t *loop;
+    uv_loop_t *loop;        // for libuv event looping
     std::string name;       // Unique name for the server
-    int port;
+    int port;               // port the server runs on
     std::string type;       // "message", "random", "error"
     std::string message;    // Used for "message" type
-    size_t data_length;      // Used for "random" type
-    int error_code;          // Used for "error" type
+    size_t data_length;     // Used for "random" type
+    int error_code;         // Used for "error" type
     std::string duration;   // "continuous", "timed", "timeout"
-    int timeout_seconds;     // Used for "timed" and "timeout" types
+    int timeout_seconds;    // Used for "timed" and "timeout" types
     bool isTimeoutExpired;  // Used to track the inactivity timeout
     uv_tcp_t* serverHandle; // Pointer to the server handle
     bool isServerRunning;   // Flag t
-    std::unique_ptr<tfk_logger> log;
+    std::unique_ptr<tfk_logger> log; // logging output
     uv_timer_t timeoutTimer;// Timer for timeout
     BufferData bufferData;  // Buffer data for reading http requests
-    std::string httpResponse; // Response string  
+    std::string httpResponse;   // Response string  
 };
-
-//static void alloc_buffer_(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
-//    // Allocate a buffer for reading data
-//    buf->base = static_cast<char*>(malloc(suggested_size));
-//    buf->len = suggested_size;
-//}
 
 // Callback for when the server handle is closed
 void on_server_closed(uv_handle_t* handle) {
@@ -112,7 +122,7 @@ void on_http_request(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
                     
                 } else {
                     //std::cerr << "Unknown server type: " << serverConfig->type << std::endl;
-                    serverConfig->log->logError("unknown server type {}", serverConfig->type);
+                    serverConfig->log->logError("server type {} unhandled", serverConfig->type);
                     uv_close(reinterpret_cast<uv_handle_t*>(stream), nullptr);
                     free(buf->base);
                     return;
@@ -151,7 +161,7 @@ void on_http_request(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
         catch(const std::exception& e) {
            //  config parsing error, handle as needed
             std::cerr << "Config parsing error: " << e.what() << std::endl;
-            serverConfig->log->logError("config parsig error {}", e.what());
+            serverConfig->log->logError("server config parsig error {}", e.what());
             uv_close(reinterpret_cast<uv_handle_t*>(stream), on_server_closed);
         }
 
@@ -159,7 +169,7 @@ void on_http_request(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
         // An error or EOF occurred
         if (nread != UV_EOF) {
             std::cerr << "Read error: " << uv_strerror(nread) << std::endl;
-            serverConfig->log->logError("read {}({})", uv_strerror(nread), nread);
+            serverConfig->log->logError("server read {}({})", uv_strerror(nread), nread);
         }
         uv_close(reinterpret_cast<uv_handle_t*>(stream), nullptr);
     }
@@ -174,7 +184,7 @@ void on_connection(uv_stream_t* server, int status) {
 
     if (status < 0) {
         std::cerr << "Connection error: " << uv_strerror(status) << std::endl;
-        serverConfig->log->logError("connection {}({})", uv_strerror(status), status);
+        serverConfig->log->logError("server connection {}({})", uv_strerror(status), status);
         return;
     }
 
@@ -221,7 +231,7 @@ void on_timeout(uv_timer_t* timer) {
 void on_signal_server(uv_signal_t* handle, int signum) {
 
     ServerConfig *serverConfig =  static_cast<ServerConfig*>(uv_handle_get_data(reinterpret_cast<uv_handle_t*>(&handle)));
-    serverConfig->log->logInfo("Received Ctrl+C. Cleaning up servers and exiting...");
+    serverConfig->log->logInfo("Servers received Ctrl+C. Clean up and exit...");
     
     uv_signal_stop(handle);
 
@@ -259,21 +269,7 @@ tfk_servers::tfk_servers(uv_loop_t* dl):loop(dl==nullptr?uv_default_loop():dl) {
 
     else
     {   // nothing specified in the environment variable, Run one default server
-        server_configs = json::parse(R"(
-        {
-          "servers":[
-            {
-              "name": "server",
-              "port": 8080,
-              "type": "message",
-              "message": "Hello_World!",
-              "data_length" : -1,
-              "error_code": 200,
-              "duration" : "continuous",
-              "timeout_seconds": -1
-            }
-          ]
-        })");
+        server_configs = json::parse(kDefaultServer);
     }
   
 try{

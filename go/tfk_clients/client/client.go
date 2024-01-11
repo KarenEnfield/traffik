@@ -102,13 +102,18 @@ func (c *Client) Run(wg *sync.WaitGroup) {
 
 	defer wg.Done()
 	log := logger.NewLogger(c.Name, c.logLevel)
-	log.Debug("Begin sending messages to %s:%d", c.IPAddress, c.Port)
+	if c.MaxSends >= 0 {
+		log.Info("Client begin sending %d messages to %s:%d", c.MaxSends, c.IPAddress, c.Port)
+	} else {
+		log.Info("Client begin sending continuous messages to %s:%d", c.IPAddress, c.Port)
+
+	}
 
 	interval := time.Second / time.Duration(c.Rate)
 
 	// Simulating client activity
 	for i := 1; c.MaxSends == -1 || i <= c.MaxSends; i++ {
-		log.Info("send #%d to   %s:%d", i, c.IPAddress, c.Port)
+		log.Info("client send (%d)", i)
 
 		// Your client logic goes here (send the message, etc.)
 		result, err := c.sendMessage()
@@ -117,26 +122,26 @@ func (c *Client) Run(wg *sync.WaitGroup) {
 				// Check if the embedded error is of type *net.OpError
 				if opErr, ok := urlErr.Err.(*net.OpError); ok {
 					// Extract the HTTP status code and message from the embedded error
-					log.Info("neterr send #%d to %s:%d %s (%s)", i, c.IPAddress, c.Port, opErr.Err, opErr.Op)
+					log.Info("client neterr send #%d to %s:%d %s (%s)", i, c.IPAddress, c.Port, opErr.Err, opErr.Op)
 
 				} else {
 					// If the embedded error is not of type *net.OpError, print the original error
-					log.Info("urlerr send #%d to %s:%d %s", i, c.IPAddress, c.Port, err)
+					log.Info("client urlerr send #%d to %s:%d %s", i, c.IPAddress, c.Port, err)
 				}
 			} else {
 				// If the error is not of type *url.Error, print the original error
-				log.Info("tcperr send #%d to %s:%d %s", i, c.IPAddress, c.Port, err)
+				log.Info("client tcperr send #%d to %s:%d %s", i, c.IPAddress, c.Port, err)
 			}
 
 		} else {
-			log.Info("resp #%d from %s:%d %.15s ...", i, c.IPAddress, c.Port, result)
+			log.Debug("client resp #%d from %s:%d %.15s ...", i, c.IPAddress, c.Port, result)
 		}
 
 		// Simulate some processing time
 		time.Sleep(interval)
 	}
 
-	log.Info("Completed maximum sends (%d) to %s:%d", c.MaxSends, c.IPAddress, c.Port)
+	log.Info("Client stopped after reaching maximum sends (%d)", c.MaxSends)
 
 }
 

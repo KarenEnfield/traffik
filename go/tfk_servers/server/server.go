@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
-	"strconv"
 	"sync"
 	"time"
 
@@ -107,8 +106,9 @@ func (s *Server) SetLogLevel(level logger.LogLevel) {
 // Run runs the server
 func (s *Server) Run() {
 	// ... (server logic, e.g., handling requests)
-	strName := "Server::" + strconv.Itoa(s.Port)
-	log := logger.NewLogger(strName, logger.LogLevel(s.logLevel))
+	//strName := "Server::" + strconv.Itoa(s.Port)
+
+	log := logger.NewLogger(s.Name, logger.LogLevel(s.logLevel))
 
 	// Create a new ServeMux (router) for each server
 	mux := http.NewServeMux()
@@ -116,7 +116,7 @@ func (s *Server) Run() {
 	// Register handlers for different routes
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 
-		log.Info("request from %s", r.RemoteAddr)
+		log.Info("server connection from %s", r.RemoteAddr)
 		// Activity occurred, note the time
 		s.lock.Lock()
 		s.lastActivity = time.Now()
@@ -133,8 +133,8 @@ func (s *Server) Run() {
 		case "error":
 			handleError(w, r, s.ErrorCode)
 		default:
-			http.Error(w, "default server response", http.StatusInternalServerError)
-			log.Error("unhandled server type: %s from %s", s.Type, r.RemoteAddr)
+			http.Error(w, "server response undefined", http.StatusInternalServerError)
+			log.Error("server type: %s undefined from %s", s.Type, r.RemoteAddr)
 		}
 	})
 
@@ -146,7 +146,7 @@ func (s *Server) Run() {
 		Handler: mux,
 	}
 
-	log.Info("Start server '%s' type: %s, datalen: %d, %s (%d)", s.Name, s.Type, s.DataLength, s.Duration, s.TimeoutSeconds)
+	log.Info("Start server on port '%s' type: %s, datalen: %d, %s (%d)", s.Port, s.Type, s.DataLength, s.Duration, s.TimeoutSeconds)
 
 	switch s.Duration {
 	case "continuous":
@@ -173,21 +173,21 @@ func (s *Server) Run() {
 				s.lock.Unlock()
 
 				if lastActivityDuration >= s.inactivityDur {
-					log.Info("Stop server '%s' after %d seconds of inactivity", s.Name, s.TimeoutSeconds)
+					log.Info("Server stopping after %d seconds of inactivity", s.TimeoutSeconds)
 					s.Stop()
 					return
 				}
 
 			case <-s.stopChan:
 				// Stop the server if requested
-				log.Info("Server '%s' stopping...", s.Name)
+				log.Debug("Server is stopping...")
 				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 				defer cancel()
 
 				if err := srv.Shutdown(ctx); err != nil {
-					log.Info("Error shutting down server '%s' : %v", s.Name, err)
+					log.Error("Server shut down : %v", err)
 				}
-				log.Info("Server '%s' stopped.", s.Name)
+				log.Info("Server stopped")
 				return
 			}
 		}
@@ -197,14 +197,14 @@ func (s *Server) Run() {
 			for {
 				select {
 				case <-time.After(time.Duration(s.TimeoutSeconds) * time.Second):
-					log.Info("Stop timed server '%s' after %d seconds", s.Name, s.TimeoutSeconds)
+					log.Info("Server timed out after %d seconds", s.TimeoutSeconds)
 					// You may add additional cleanup logic here if needed
 					return
 				}
 			}
 		}()
 	default:
-		log.Info("invalid duration: %s", s.Duration)
+		log.Error("server invalid duration: %s", s.Duration)
 	}
 
 }

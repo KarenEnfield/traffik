@@ -23,7 +23,7 @@ The "data/input" folders have two JSON files demonstrating client and server JSO
 ## Logging 
 Logging levels are set at log.Info level by default.
 TFK_LOG_LEVEL may be specified in the enviroment to 
-"trace", "debug", "info", "warn", "err", "critical", or "off".
+"trace", "debug", "info", "warning", "error", "critical", or "off".
 
 
 ## Docker Go Build
@@ -44,8 +44,8 @@ C++17 is used
 libuv must be installed for C++ compilation: 
     %   brew install libuv 
 
-optional spdlog: the open source project "spdlog" can be installed and used for logging, otherwise traffik utilizes its own in-house logging mechanism by default.
-    Install it (macOS)
+optional spdlog: the open source project "spdlog" can be installed and used for logging with higher time precision, instead of traffik's own logging mechanism.
+    Install spdlog in (macOS)
         %   brew install spdlog 
     CMakeLists.txt, uncomment this line
         add_definitions(-DUSE_SPDLOG)

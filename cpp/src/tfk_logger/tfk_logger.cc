@@ -3,40 +3,37 @@
 #include "tfk_logger.h"
 
 
-tfk_logger::tfk_logger(std::string console_name): console_name_(console_name){
+tfk_logger::tfk_logger(std::string_view console_name): console_name_(console_name){
         
     // Set the log level for all loggers
  
     // Get log level from environment variable, default to info if not set
     const char* logLevelStr = std::getenv("TFK_LOG_LEVEL");
-    std::string str{"info"};
 
     if (logLevelStr!=nullptr) // if there is a level specified
+    {   std::string str;
         str.assign(logLevelStr);
-      
-    stringToLogLevel(str);
+        stringToLogLevel(str);
+    }
+    else
+        stringToLogLevel(log_level_str_);
         
-    
-    
 #ifdef USE_SPDLOG    
 
     // Create a console logger
-    console_logger_ = spdlog::stdout_logger_mt(console_name);
+    console_logger_ = spdlog::stdout_logger_mt(console_name_);
        
     // Log messages with different severity levels
-    console_logger_->trace("This is a trace message.");
-    console_logger_->debug("This is a debug message.");
-    console_logger_->info("This is an information message.");
-    console_logger_->warn("This is a warning message.");
-    console_logger_->error("This is an error message.");
-    console_logger_->critical("This is a critical message.");
+    logTrace("This is an spdlog trace message.");
+    logDebug("This is an spdlog debug message.");
+    logInfo("This is an spdlog information message.");
+    logWarn("This is an spdlog warning message.");
+    logError("This is an spdlog error message.");
+    logCritical("This is an spdlog critical message.");
   
     // Create a file logger
     // _file_logger = spdlog::rotating_logger_mt("file_logger", "logs/mylogfile", 1048576 * 5, 3);
    
-    // Set the log level for both loggers
-    // spdlog::set_level(spdlog::level::debug);
-
     // Log messages
     //_console_logger->info("This is an information message on the console.");
     //_file_logger->warn("This is a warning message logged to the file.");
@@ -47,46 +44,50 @@ tfk_logger::tfk_logger(std::string console_name): console_name_(console_name){
 
     // Flush loggers (this can be important for asynchronous loggers)
     // spdlog::flush_all();
+#else    
+    // Log messages with different severity levels
+    logTrace("This is a trace message.");
+    logDebug("This is a debug message.");
+    logInfo("This is an information message.");
+    logWarn("This is a warning message.");
+    logError("This is an error message.");
+    logCritical("This is a critical message.");
+ 
 #endif
 
   
 }
 
 
-// Helper function to convert a string to CustomLogLevel
+// Helper function to convert a string to kCustomLogLevel
 void tfk_logger::stringToLogLevel(std::string levelStr)
 {
-    std::transform(levelStr.begin(), levelStr.end(), levelStr.begin(), ::tolower);
+    // change the internal logging level if valid one is defined
+    const auto& a = mpCustomLogLevel.find(levelStr) ;
+    if (a!=mpCustomLogLevel.end()){
+        log_level_str_ = levelStr;
+        log_level_ = a->second;
+    }
     
 #ifdef USE_SPDLOG
-        // set spdlog
-        if (levelStr == "trace") spdlog::set_level(spdlog::level::trace);
-        else if (levelStr == "debug")  spdlog::set_level(spdlog::level::debug);
-        else if (levelStr == "info")  spdlog::set_level(spdlog::level::info);
-        else if (levelStr == "warn")  spdlog::set_level(spdlog::level::warn);
-        else if (levelStr == "err")  spdlog::set_level(spdlog::level::err);
-        else if (levelStr == "critical")  spdlog::set_level(spdlog::level::critical);
-        else if (levelStr == "off")  spdlog::set_level(spdlog::level::off);
-
-        // Default to info if the input is not recognized
-        else   spdlog::set_level(spdlog::level::info);
+    // set spdlog level
+    if (log_level_ == kCustomLogLevel::trace) spdlog::set_level(spdlog::level::trace);
+    else if (log_level_ == kCustomLogLevel::debug)  spdlog::set_level(spdlog::level::debug);
+    else if (log_level_ == kCustomLogLevel::info)  spdlog::set_level(spdlog::level::info);
+    else if (log_level_ == kCustomLogLevel::warn)  spdlog::set_level(spdlog::level::warn);
+    else if (log_level_ == kCustomLogLevel::err)  spdlog::set_level(spdlog::level::err);
+    else if (log_level_ == kCustomLogLevel::critical)  spdlog::set_level(spdlog::level::critical);
+    else if (log_level_ == kCustomLogLevel::off)  spdlog::set_level(spdlog::level::off);
+    // Default to info if the input is not recognized
+    else {  
+        // should not get here
+        spdlog::set_level(spdlog::level::info);
+        log_level_ = kCustomLogLevel::info;
+        log_level_str_ = "info";
+    }
 
 #endif
-        // set the internal logging level;
-        if (levelStr == "trace") log_level_= CustomLogLevel::trace;
-        else if (levelStr == "debug") log_level_= CustomLogLevel::debug;
-        else if (levelStr == "info") log_level_= CustomLogLevel::info;
-        else if (levelStr == "warn") log_level_= CustomLogLevel::warn;
-        else if (levelStr == "err") log_level_= CustomLogLevel::err;
-        else if (levelStr == "critical") log_level_= CustomLogLevel::critical;
-        else if (levelStr == "off") log_level_= CustomLogLevel::off;
+    
 
-        // Default to info if the input is not recognized
-        else {
-            log_level_= CustomLogLevel::info;
-            levelStr = "info";
-        }
-
-        log_level_str_ = levelStr;
 
 }

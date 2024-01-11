@@ -3,7 +3,11 @@ cmake_minimum_required(VERSION 3.28.1)
 set(CMAKE_CXX_COMPILER "clang++")
 set(CMAKE_CXX_STANDARD 17)
 
-add_definitions(-DUSE_SPDLOG)
+# Set the default spdlog & logging level optionally
+add_definitions(
+    #-DUSE_SPDLOG
+    #-DTFK_LOG_ERROR
+)
 
 # Common source files for both standalone executable and microservice
 set(COMMON_SOURCES

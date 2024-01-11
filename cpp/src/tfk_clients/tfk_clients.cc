@@ -3,16 +3,30 @@
 
 #include <iostream>
 #include <fstream>
-#include <vector>
-#include <string>
-#include <memory>
-#include <unordered_map>
+#include <memory>//
 #include <unistd.h>
+#include <unordered_map>
+#include <vector>
 
 #include <uv.h>
 #include <nlohmann/json.hpp>
 
+using std::unique_ptr;
+
 using json = nlohmann::json;
+
+static constexpr std::string_view kDefaultClient = R"(
+{
+    "clients":[
+    {
+        "name": "client",
+        "url": "127.0.0.1:8080",
+        "rate": 1,
+        "message": "Hello World",
+        "max_sends" : 10
+    }
+    ]
+})";
 
 struct ClientConfig {
     uv_loop_t *loop;
@@ -201,18 +215,7 @@ tfk_clients::tfk_clients(uv_loop_t * dl):loop(dl==nullptr?uv_default_loop():dl)
     // else no clients to process ??  Lets send one client to the local server to create traffik
     else
     {   // nothing specified in the environment variable, Run one default server
-        config = json::parse(R"(
-        {
-          "clients":[
-            {
-              "name": "client",
-              "url": "127.0.0.1:8080",
-              "rate": 1,
-              "message": "Hello World",
-              "max_sends" : 10
-            }
-          ]
-        })");
+        config = json::parse(kDefaultClient);
     }
 
 
