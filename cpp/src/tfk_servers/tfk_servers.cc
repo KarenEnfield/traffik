@@ -1,9 +1,10 @@
 #include "tfk_servers.h"
 #include "../tfk_logger/tfk_logger.h"
 
-#include <chrono>
-#include <fstream>
 #include <iostream>
+#include <chrono>
+#include <fmt/core.h>  // For fmtlib
+#include <fstream>
 #include <memory>
 #include <unistd.h>
 
@@ -12,21 +13,46 @@
 
 using json = nlohmann::json;
 
-static constexpr std::string_view kDefaultServer = R"(
-{
-    "servers":[
-    {
-        "name": "server",
-        "port": 8080,
-        "type": "message",
-        "message": "Hello_World!",
-        "data_length" : -1,
-        "error_code": 200,
-        "duration" : "continuous",
-        "timeout_seconds": -1
+const char * kDefaultServer = R"(
+    {       
+        "servers":[
+            {
+                "name": "server",
+                "port": 8080,
+                "type": "message",
+                "message": "Hello World!",
+                "data_length" : -1,
+                "error_code": 200,
+                "duration": "continuous",
+                "timeout_seconds": -1
+            }
+        ]
     }
-    ]
-})";
+)";
+
+const char * kServerTemplate = R"(
+    {{ 
+        "servers":[
+            {{
+                "name": "{}",
+                "port": {},
+                "type": "{}",
+                "message": "{}",
+                "data_length": {},
+                "error_code": {},
+                "duration": "{}",
+                "timeout_seconds": {}
+            }}
+        ]
+    }}
+)";
+
+
+std::string tfk_servers::CreateConfigString(std::string name, int port, std::string serverType, std::string message, int dataLength, int errorCode, std::string duration, int timeout)
+{
+    std::string retval = fmt::format(kServerTemplate, name, port, serverType, message, dataLength, errorCode, duration, timeout);    
+    return retval;
+}
 
 // Structure to hold server configuration
 struct BufferData {
@@ -241,7 +267,7 @@ void on_signal_server(uv_signal_t* handle, int signum) {
 }
 
 
-tfk_servers::tfk_servers(uv_loop_t* dl):loop(dl==nullptr?uv_default_loop():dl) {
+tfk_servers::tfk_servers(uv_loop_t* dl, const char *configData, const char *logLevel):loop(dl==nullptr?uv_default_loop():dl) {
     
     // Contains list of servers to run, from a JSON format
     json server_configs;
@@ -251,8 +277,11 @@ tfk_servers::tfk_servers(uv_loop_t* dl):loop(dl==nullptr?uv_default_loop():dl) {
 
     // Get the json list from the TFK_CONFIG environment variable
     const char* configFilePath = std::getenv("TFK_CONFIG");
-    
-    if (configFilePath) {
+    if (configData!=nullptr)
+    {
+        server_configs = json::parse(configData);
+    }
+    else if (configFilePath) {
         // Read server configurations from a JSON file
         std::ifstream config_file(configFilePath);
         if (!config_file.is_open()) {
@@ -288,7 +317,7 @@ try{
         std::string duration = "continuous";//config["duration"];    // "continuous", "timed", "timeout"
         int timeout_seconds = -1;            //config["timeout_seconds"];// Used for "timed" and "timeout" types
         
-        std::unique_ptr<tfk_logger> log_ptr = std::make_unique<tfk_logger>(name);
+        std::unique_ptr<tfk_logger> log_ptr = std::make_unique<tfk_logger>(name.c_str(), logLevel);
            
         // Safely check for the existence of other keys
         if (auto it = config.find("type"); it != config.end() && it->is_string()) {

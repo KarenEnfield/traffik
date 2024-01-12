@@ -3,14 +3,17 @@
 #include "tfk_logger.h"
 
 
-tfk_logger::tfk_logger(std::string_view console_name): console_name_(console_name){
+tfk_logger::tfk_logger(const char * console_name, const char *logLevel): console_name_(console_name){
         
     // Set the log level for all loggers
  
     // Get log level from environment variable, default to info if not set
     const char* logLevelStr = std::getenv("TFK_LOG_LEVEL");
-
-    if (logLevelStr!=nullptr) // if there is a level specified
+    // a log level override was specified
+    if (logLevel!=nullptr) {
+        stringToLogLevel(logLevel);
+    }
+    else if (logLevelStr!=nullptr) // if there is a level specified
     {   std::string str;
         str.assign(logLevelStr);
         stringToLogLevel(str);

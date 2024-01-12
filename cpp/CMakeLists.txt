@@ -22,9 +22,9 @@ set(EXECUTABLE_SOURCES
     src/main.cc
     # Add more executable-specific source files as needed
 )
-
+ 
 # Define a common library target
-add_library(common_library ${COMMON_SOURCES})
+add_library(common_library OBJECT ${COMMON_SOURCES})
 
 # Define the standalone executable target
 add_executable(traffik ${EXECUTABLE_SOURCES})
@@ -41,5 +41,5 @@ target_link_libraries(traffik PRIVATE common_library ${LIBUV_LIBRARY} )
 #endif
 
 # Link common library to both targets
-target_link_libraries(traffik PRIVATE common_library ${LIBUV_LIBRARY} spdlog::spdlog )
+#target_link_libraries(traffik PRIVATE common_library ${LIBUV_LIBRARY} spdlog::spdlog )
 

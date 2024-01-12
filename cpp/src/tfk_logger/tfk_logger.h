@@ -59,7 +59,7 @@ class tfk_logger{
     void stringToLogLevel(std::string levelStr) ;
 
 public:
-    tfk_logger(std::string_view console_name);
+    tfk_logger(const char * console_name, const char * logLevel=nullptr);
 
     // Log messages with various variables
    
@@ -228,9 +228,9 @@ public:
 #endif
     }
     
-    std::string_view getLogLevel()
+    const char * getLogLevel()
     {
-        return log_level_str_;
+        return log_level_str_.c_str();
     }
 
 #ifndef USE_SPDLOG    

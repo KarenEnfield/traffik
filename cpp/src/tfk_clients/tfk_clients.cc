@@ -2,6 +2,7 @@
 #include "../tfk_logger/tfk_logger.h"
 
 #include <iostream>
+#include <fmt/core.h>  // For fmtlib
 #include <fstream>
 #include <memory>//
 #include <unistd.h>
@@ -15,18 +16,37 @@ using std::unique_ptr;
 
 using json = nlohmann::json;
 
-static constexpr std::string_view kDefaultClient = R"(
+const char * kDefaultClient = R"(
 {
     "clients":[
-    {
-        "name": "client",
-        "url": "127.0.0.1:8080",
-        "rate": 1,
-        "message": "Hello World",
-        "max_sends" : 10
-    }
+        {
+            "name": "client",
+            "url": "127.0.0.1:8080",
+            "rate": 1,
+            "message": "Hello World",
+            "max_sends" : 10
+        }
     ]
 })";
+
+const char * kClientTemplate = R"(
+{{
+    "clients":[
+        {{
+            "name": "{}",
+            "url": "{}",
+            "rate": {},
+            "message": "{}",
+            "max_sends": {}
+        }}
+    ]
+}})";
+
+std::string tfk_clients::CreateConfigString(std::string name, std::string url, std::string message, int rate, int maxSends)
+{
+    std::string retval = fmt::format(kClientTemplate,name, url, rate, message, maxSends);
+    return retval;
+}
 
 struct ClientConfig {
     uv_loop_t *loop;
@@ -187,7 +207,7 @@ void on_read(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
     
 }
 
-tfk_clients::tfk_clients(uv_loop_t * dl):loop(dl==nullptr?uv_default_loop():dl)
+tfk_clients::tfk_clients(uv_loop_t * dl, const char * configData, const char *logLevel):loop(dl==nullptr?uv_default_loop():dl)
 {
     // Contains list of clients to run, from a JSON format
     json config;
@@ -196,7 +216,11 @@ tfk_clients::tfk_clients(uv_loop_t * dl):loop(dl==nullptr?uv_default_loop():dl)
     // Get the value of the TFK_CONFIG environment variable
     const char* configFilePath = std::getenv("TFK_CONFIG");
     
-    if (configFilePath) {
+    if (configData!=nullptr)
+    {
+        config = json::parse(configData);
+    }
+    else if (configFilePath) {
         // Now you can use 'configFilePath' in your code
 
         // Read client configurations from a JSON file
@@ -232,7 +256,7 @@ tfk_clients::tfk_clients(uv_loop_t * dl):loop(dl==nullptr?uv_default_loop():dl)
         ClientConfig *clientConfig = new ClientConfig;
 
         // Create a logger - check for duplicates
-        clientConfig->log = std::make_unique<tfk_logger>(name);
+        clientConfig->log = std::make_unique<tfk_logger>(name.c_str(), logLevel);
         
         // Check if the URL has the "http://" prefix and remove it
         std::string cleanedUrl = url;

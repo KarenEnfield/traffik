@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
@@ -146,7 +147,7 @@ func (s *Server) Run() {
 		Handler: mux,
 	}
 
-	log.Info("Start server on port '%s' type: %s, datalen: %d, %s (%d)", s.Port, s.Type, s.DataLength, s.Duration, s.TimeoutSeconds)
+	log.Info("Start server on port '%s' type: %s, datalen: %d, %s (%d)", strconv.Itoa(s.Port), s.Type, s.DataLength, s.Duration, s.TimeoutSeconds)
 
 	switch s.Duration {
 	case "continuous":

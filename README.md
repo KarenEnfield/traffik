@@ -48,10 +48,31 @@ optional spdlog: the open source project "spdlog" can be installed and used for 
     Install spdlog in (macOS)
         %   brew install spdlog 
     CMakeLists.txt, uncomment this line
-        add_definitions(-DUSE_SPDLOG)
+        add_definitions(
+            -DUSE_SPDLOG
+            )
 
+optional quiet logging in default compile
+CMakeLists.txt, uncomment this line to have no output other than error messages as default
+        add_definitions(
+            -DLOG_LEVEL_ERROR
+        )    
 
-## File structure:
+## Command Line overrides (CPP build only)
+    "--port int // indicates creation of a server
+    --server_type "<string>"
+    --message "<string>"
+    --timeout <int>
+    --data_length <int>
+    --url  "<string>" // indicates the creation of a client
+    --name "<string>"
+    --error_code <int>
+    --max_sends <int>
+    --rate <int>
+    --log_level "<string>"//
+    
+
+## File directory structure:
 
 traffik/
 |-- CMakeLists.txt  # The root CMakeLists.txt file
